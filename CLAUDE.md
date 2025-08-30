@@ -8,26 +8,36 @@ You're working on **SolidAuth** - an academic research project creating a decent
 
 ### CRITICAL: First Commands for New Session
 ```bash
-# 1. Check for checkpoint from previous session
-cat CHECKPOINT.md 2>/dev/null || echo "No checkpoint found"
+# 1. Find last checkpoint from git history
+git log --grep=CHECKPOINT --oneline -1
 
 # 2. Check what needs to be done
 gh issue list --repo erdalgunes/solid-federated-auth --state open
 
-# 3. See recent work
+# 3. See recent work (if no checkpoint found)
 git log --oneline -5
 
-# 4. Read context preservation protocol
-cat CONTEXT_PROTOCOL.md  # IMPORTANT: Explains how to prevent context degradation
+# 4. View current issue status
+gh project item-list 3 --owner erdalgunes
 ```
 
 ### Context Preservation Rules
 **IMPORTANT**: Claude has limited context window. To prevent degradation and hallucinations:
-1. **Work in 30-minute chunks** - Set a timer, checkpoint at 30 mins
-2. **One issue per session** - NEVER work on multiple issues
-3. **Verify all research** - Use `tavily` to confirm papers/citations exist
+1. **One issue per session** - NEVER work on multiple issues (primary rule)
+2. **Checkpoint after each issue** - Atomic git commit when issue is complete
+3. **Checkpoint when context heavy** - After 3-5 major file operations or complex work
 4. **Use sequential thinking** - For complex reasoning, use `mcp__sequential-thinking__sequentialthinking`
-5. **Checkpoint frequently** - Update CHECKPOINT.md and commit every 30 minutes
+5. **Verify all research** - Use `tavily` to confirm papers/citations exist
+
+### Checkpoint Protocol
+```bash
+# Checkpoint commit format:
+# After completing an issue:
+git commit -m "[CHECKPOINT] Issue #N completed: <summary> | Next: Issue #M"
+
+# Mid-issue checkpoint (if needed):
+git commit -m "[CHECKPOINT] Issue #N in-progress: <what's done> | Continue: <what's left>"
+```
 
 ### Quick Orientation Commands
 ```bash
@@ -45,19 +55,19 @@ gh issue develop [NUMBER]  # Creates branch and checks out
 ```
 
 ### Current Status Check
-1. **Checkpoint**: First check `CHECKPOINT.md` for work in progress
+1. **Last Checkpoint**: Run `git log --grep=CHECKPOINT --oneline -1`
 2. **Phase**: Check milestones with `gh api repos/erdalgunes/solid-federated-auth/milestones`
-3. **Active Issues**: Use commands above
+3. **Active Issues**: Use `gh issue list --state open`
 4. **Repository State**: Check git status and recent commits
-5. **Documentation**: Key files are README.md (overview), RESEARCH_PLAN.md (methodology), ISSUE_WORKFLOW.md (how we work), CONTEXT_PROTOCOL.md (context preservation)
+5. **Documentation**: Key files are README.md (overview), RESEARCH_PLAN.md (methodology), ISSUE_WORKFLOW.md (how we work)
 
 ### How to Continue Work
-1. **ALWAYS** check CHECKPOINT.md first
-2. Read any open issue to understand current tasks
+1. **ALWAYS** check last checkpoint: `git log --grep=CHECKPOINT --oneline -1`
+2. Read the issue mentioned in checkpoint to understand current tasks
 3. Check ISSUE_WORKFLOW.md for the GitHub-based research workflow
 4. Use the research agents defined below for specific tasks
 5. Follow the established patterns in existing code/docs
-6. **Set 30-minute timer** and checkpoint when it rings
+6. **Remember**: One issue per session, checkpoint after completion
 
 ### Key Principles
 - Simple, working solutions over complex abstractions (YAGNI-first)
