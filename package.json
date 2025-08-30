@@ -1,0 +1,29 @@
+{
+  "name": "solidauth",
+  "version": "0.1.0",
+  "description": "Decentralized authentication gateway for Solid-OIDC",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "solid",
+    "webid",
+    "authentication",
+    "oidc",
+    "decentralized"
+  ],
+  "author": "Erdal Gunes",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/erdalgunes/solid-federated-auth.git"
+  },
+  "dependencies": {
+    "@inrupt/solid-client-authn-node": "^2.0.0"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
