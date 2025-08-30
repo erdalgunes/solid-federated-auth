@@ -1,5 +1,46 @@
 # Solid Federated Auth Research Project
 
+## 🧠 Session Context (Start Here)
+
+**If you're a new Claude session, here's what you need to know:**
+
+You're working on **SolidAuth** - an academic research project creating a decentralized authentication gateway. Think Auth0, but with user-controlled identity via Solid-OIDC.
+
+### Quick Orientation Commands
+```bash
+# 1. Check what needs to be done
+gh issue list --repo erdalgunes/solid-federated-auth --state open
+
+# 2. See project board status  
+gh project item-list 3 --owner erdalgunes
+
+# 3. View current research phase
+gh issue list --milestone "Phase 1: Literature Review"
+
+# 4. Pick an issue to work on
+gh issue develop [NUMBER]  # Creates branch and checks out
+```
+
+### Current Status Check
+1. **Phase**: Check milestones with `gh api repos/erdalgunes/solid-federated-auth/milestones`
+2. **Active Issues**: Use commands above
+3. **Repository State**: Check git status and recent commits
+4. **Documentation**: Key files are README.md (overview), RESEARCH_PLAN.md (methodology), ISSUE_WORKFLOW.md (how we work)
+
+### How to Continue Work
+1. Read any open issue to understand current tasks
+2. Check ISSUE_WORKFLOW.md for the GitHub-based research workflow
+3. Use the research agents defined below for specific tasks
+4. Follow the established patterns in existing code/docs
+
+### Key Principles
+- Simple, working solutions over complex abstractions
+- Issue-driven development (every task has an issue)
+- Rigorous documentation for reproducibility
+- Academic standards for ArXiv publication
+
+---
+
 ## Project Overview
 This is an academic research project aimed at developing and evaluating a decentralized authentication gateway using Solid-OIDC protocol. The goal is to create a system that matches the developer experience of Auth0/Okta while maintaining user sovereignty, suitable for publication on ArXiv.
 
