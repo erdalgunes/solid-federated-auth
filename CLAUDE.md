@@ -6,6 +6,29 @@
 
 You're working on **SolidAuth** - an academic research project creating a decentralized authentication gateway. Think Auth0, but with user-controlled identity via Solid-OIDC.
 
+### CRITICAL: First Commands for New Session
+```bash
+# 1. Check for checkpoint from previous session
+cat CHECKPOINT.md 2>/dev/null || echo "No checkpoint found"
+
+# 2. Check what needs to be done
+gh issue list --repo erdalgunes/solid-federated-auth --state open
+
+# 3. See recent work
+git log --oneline -5
+
+# 4. Read context preservation protocol
+cat CONTEXT_PROTOCOL.md  # IMPORTANT: Explains how to prevent context degradation
+```
+
+### Context Preservation Rules
+**IMPORTANT**: Claude has limited context window. To prevent degradation and hallucinations:
+1. **Work in 30-minute chunks** - Set a timer, checkpoint at 30 mins
+2. **One issue per session** - NEVER work on multiple issues
+3. **Verify all research** - Use `tavily` to confirm papers/citations exist
+4. **Use sequential thinking** - For complex reasoning, use `mcp__sequential-thinking__sequentialthinking`
+5. **Checkpoint frequently** - Update CHECKPOINT.md and commit every 30 minutes
+
 ### Quick Orientation Commands
 ```bash
 # 1. Check what needs to be done
@@ -22,22 +45,79 @@ gh issue develop [NUMBER]  # Creates branch and checks out
 ```
 
 ### Current Status Check
-1. **Phase**: Check milestones with `gh api repos/erdalgunes/solid-federated-auth/milestones`
-2. **Active Issues**: Use commands above
-3. **Repository State**: Check git status and recent commits
-4. **Documentation**: Key files are README.md (overview), RESEARCH_PLAN.md (methodology), ISSUE_WORKFLOW.md (how we work)
+1. **Checkpoint**: First check `CHECKPOINT.md` for work in progress
+2. **Phase**: Check milestones with `gh api repos/erdalgunes/solid-federated-auth/milestones`
+3. **Active Issues**: Use commands above
+4. **Repository State**: Check git status and recent commits
+5. **Documentation**: Key files are README.md (overview), RESEARCH_PLAN.md (methodology), ISSUE_WORKFLOW.md (how we work), CONTEXT_PROTOCOL.md (context preservation)
 
 ### How to Continue Work
-1. Read any open issue to understand current tasks
-2. Check ISSUE_WORKFLOW.md for the GitHub-based research workflow
-3. Use the research agents defined below for specific tasks
-4. Follow the established patterns in existing code/docs
+1. **ALWAYS** check CHECKPOINT.md first
+2. Read any open issue to understand current tasks
+3. Check ISSUE_WORKFLOW.md for the GitHub-based research workflow
+4. Use the research agents defined below for specific tasks
+5. Follow the established patterns in existing code/docs
+6. **Set 30-minute timer** and checkpoint when it rings
 
 ### Key Principles
-- Simple, working solutions over complex abstractions
+- Simple, working solutions over complex abstractions (YAGNI-first)
 - Issue-driven development (every task has an issue)
 - Rigorous documentation for reproducibility
 - Academic standards for ArXiv publication
+- **Verify everything** - Never trust memory, always verify with Tavily
+
+### Tool Usage Guidelines
+
+#### GitHub CLI (`gh` via Bash) - PRIMARY INTERFACE
+**We use GitHub CLI for ALL GitHub operations:**
+```bash
+# Issues
+gh issue list --state open                    # See what needs work
+gh issue view [NUMBER]                        # Read issue details
+gh issue create --title "..." --body "..."    # Create new issue
+gh issue close [NUMBER] -c "Done"            # Close with comment
+gh issue develop [NUMBER]                     # Create branch for issue
+
+# Projects  
+gh project item-list 3 --owner erdalgunes     # View project board
+gh project item-add 3 --owner erdalgunes --url [ISSUE_URL]
+
+# Pull Requests
+gh pr create --title "..." --body "..."       # Create PR
+gh pr list                                    # List PRs
+gh pr merge                                   # Merge PR
+
+# Repository
+gh repo view                                  # See repo info
+gh api repos/erdalgunes/solid-federated-auth/milestones
+
+# Wiki (if needed)
+gh api repos/erdalgunes/solid-federated-auth/wiki
+```
+
+#### When to use Sequential Thinking (`mcp__sequential-thinking__sequentialthinking`)
+- Planning complex implementations
+- Analyzing multi-step problems
+- Designing protocols or architectures
+- Reasoning through trade-offs
+- Preventing context degradation in long tasks
+- **Chain-of-thought reasoning for research**
+
+#### When to use Tavily (`mcp__tavily-mcp__tavily-search` or `tavily-extract`)
+- Verifying paper citations exist
+- Checking latest documentation
+- Confirming technical specifications
+- Researching best practices
+- Finding recent developments
+- **ALWAYS** before committing research findings
+- **Web access for current information**
+
+#### When to use TodoWrite
+- Starting any new issue
+- Breaking down complex tasks
+- Tracking progress through work
+- Must mark items complete as you go
+- Clean up stale todos regularly
 
 ---
 
