@@ -7,6 +7,28 @@ This document tracks relevant academic papers, industry reports, and technical s
 
 ### 2.1 Solid Protocol and WebID
 
+#### "Solid: A Platform for Decentralized Social Applications Based on Linked Data" (2016)
+- **Authors**: Sambra, A.V., Mansour, E., Hawke, S., Zereba, M., Greco, N., Ghanem, A., Zagidulin, D., Aboulnaga, A., & Berners-Lee, T.
+- **Source**: MIT CSAIL and Qatar Computing Research Institute
+- **Key Findings**:
+  - Introduces Solid architecture with personal data stores (Pods)
+  - WebID for decentralized identity
+  - Linked Data Platform (LDP) for data interoperability
+  - Web Access Control (WAC) for fine-grained permissions
+- **Relevance**: Foundational paper defining Solid ecosystem
+- **Gaps**: Early version, predates Solid-OIDC specification
+
+#### "From Resource Control to Digital Trust with User-Managed Access" (2024)
+- **Authors**: [Multiple authors]
+- **Source**: ArXiv:2411.05622
+- **Key Findings**:
+  - Analysis of Solid's Web Access Control limitations
+  - Current authentication limited to WebID exposure via OIDC
+  - Transition to W3C Linked Web Storage Working Group
+  - Identity Provider dependency issues
+- **Relevance**: Recent critical analysis of Solid authentication
+- **Gaps**: Doesn't propose Auth0-like gateway solution
+
 #### "Assessing the Solid Protocol in Relation to Security & Privacy Obligations" (2022)
 - **Authors**: [Authors]
 - **Source**: ArXiv:2210.08270
@@ -17,15 +39,27 @@ This document tracks relevant academic papers, industry reports, and technical s
 - **Relevance**: Provides security baseline for our analysis
 - **Gaps**: Limited performance evaluation
 
-#### "Access Control in Linked Data Using WebID" (2016)
-- **Authors**: [Authors]
-- **Source**: ArXiv:1611.03019
+#### "Secure Web Objects: Building Blocks for Metaverse Interoperability" (2024)
+- **Authors**: [Multiple authors]
+- **Source**: ArXiv:2407.15221
 - **Key Findings**:
-  - WebID-TLS authentication mechanism
-  - Access control patterns in RDF
-  - Scalability considerations
-- **Relevance**: Foundation for WebID authentication
-- **Gaps**: Predates Solid-OIDC specification
+  - Analysis of WebID-TLS authentication process
+  - Solid provides decentralized storage and user auth via WebID
+  - Still connection-oriented, URIs are Pod-specific
+  - JWT tokens for session management
+- **Relevance**: Recent analysis of Solid authentication mechanisms
+- **Gaps**: Focuses on metaverse use case, not general auth
+
+#### "Decentralised, Scalable and Privacy-Preserving Synthetic Data Generation" (2023)
+- **Authors**: [Multiple authors]
+- **Source**: ArXiv:2310.20062
+- **Key Findings**:
+  - WebID as IRI for agent identification
+  - Solid-OIDC for authentication
+  - Web Access Control (WAC) for authorization
+  - Privacy-preserving multiparty computation in Solid
+- **Relevance**: Shows real-world Solid authentication usage
+- **Gaps**: Specific to synthetic data generation
 
 #### "A Blockchain-driven Architecture for Usage Control in Solid" (2023)
 - **Authors**: [Authors]
@@ -117,7 +151,36 @@ This document tracks relevant academic papers, industry reports, and technical s
 
 **Gap**: No existing system combines Solid-OIDC with Auth0-like ease of use
 
-## 5. Research Gaps Identified
+## 5. Critical Papers Added (January 2025)
+
+### Recent Solid Research (2023-2025)
+
+#### "SocialGenPod: Privacy-Friendly Generative AI Social Web Applications" (2024)
+- **Source**: ArXiv:2403.10408
+- **Key Finding**: Demonstrates Solid-OIDC for user authentication in production
+- **Implementation**: Uses @inrupt/solid-client-authn for real application
+- **Gap**: No performance benchmarks provided
+
+#### "Distributed Subweb Specifications for Traversing the Web" (2023)
+- **Source**: ArXiv:2302.14411
+- **Finding**: Solid takes radical decentralization approach vs. Mastodon's federation
+- **Technical**: Built on open Web standards collection
+- **Gap**: Doesn't address developer experience challenges
+
+### Key Technical Specifications
+
+#### Solid-OIDC Specification
+- **Source**: solidproject.org/TR/oidc
+- **Status**: Current authentication standard for Solid
+- **Features**: DPoP tokens, PKCE flow, WebID claims in ID tokens
+- **Gap**: No reference implementation of gateway service
+
+#### WebID Specification
+- **Source**: W3C Incubator, various versions
+- **Evolution**: WebID-TLS → WebID-OIDC transition
+- **Current**: WebID-OIDC deprecated WebID-TLS for better browser support
+
+## 6. Research Gaps Identified (Updated)
 
 ### 5.1 Technical Gaps
 1. **Performance**: No comprehensive benchmarks of Solid-OIDC at scale
@@ -136,6 +199,35 @@ This document tracks relevant academic papers, industry reports, and technical s
 2. **Migration Paths**: No guides for moving from centralized auth
 3. **Best Practices**: Limited deployment recommendations
 4. **Case Studies**: Few production deployment reports
+
+## 7. Key Research Gap: No Auth0-like Gateway for Solid
+
+### The Problem
+After surveying 15+ papers and specifications (January 2025), we found:
+- **Technical papers** focus on protocol design and security properties
+- **Implementation papers** demonstrate specific use cases (AI, synthetic data)
+- **No paper** addresses creating a developer-friendly gateway service
+
+### What Exists
+1. **Inrupt SDKs** (@inrupt/solid-client-authn): Low-level libraries
+2. **Solid Community Server**: Reference implementation of pod server
+3. **Academic prototypes**: Specific use-case implementations
+
+### What's Missing
+1. **Gateway Service**: No Auth0-equivalent for Solid-OIDC
+2. **Performance Analysis**: No benchmarks vs. commercial services
+3. **Developer Experience**: No studies on integration complexity
+4. **Production Guide**: No best practices for deployment at scale
+
+### Our Contribution
+**SolidAuth** fills this gap by:
+1. Creating first Auth0-like gateway for Solid-OIDC
+2. Benchmarking against commercial services (Auth0, Okta, Keycloak)
+3. Providing SDKs with <2 hour integration time
+4. Formal security verification with ProVerif
+5. Production deployment guide
+
+This positions our work as the **bridge between Solid's academic foundation and practical deployment needs**.
 
 ## 6. Our Contribution Positioning
 
