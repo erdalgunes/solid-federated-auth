@@ -6,37 +6,85 @@
 
 You're working on **SolidAuth** - an academic research project creating a decentralized authentication gateway. Think Auth0, but with user-controlled identity via Solid-OIDC.
 
-### CRITICAL: First Commands for New Session
+### ⚠️ MANDATORY Session Start Checklist
+**MUST execute in order - no exceptions:**
+
 ```bash
-# 1. Find last checkpoint from git history
+# 1. ALWAYS run this first - finds your last checkpoint
 git log --grep=CHECKPOINT --oneline -1
 
-# 2. Check what needs to be done
+# 2. If checkpoint found, read that issue
+gh issue view [NUMBER_FROM_CHECKPOINT]
+
+# 3. If no checkpoint, see open issues and pick ONE
 gh issue list --repo erdalgunes/solid-federated-auth --state open
 
-# 3. See recent work (if no checkpoint found)
-git log --oneline -5
-
-# 4. View current issue status
-gh project item-list 3 --owner erdalgunes
+# 4. Create fresh TodoWrite list for your ONE issue
+# Clear any stale todos from previous sessions
 ```
 
+**REMEMBER**: One issue per session. When done, checkpoint and end session.
+
 ### Context Preservation Rules
-**IMPORTANT**: Claude has limited context window. To prevent degradation and hallucinations:
-1. **One issue per session** - NEVER work on multiple issues (primary rule)
-2. **Checkpoint after each issue** - Atomic git commit when issue is complete
-3. **Checkpoint when context heavy** - After 3-5 major file operations or complex work
-4. **Use sequential thinking** - For complex reasoning, use `mcp__sequential-thinking__sequentialthinking`
-5. **Verify all research** - Use `tavily` to confirm papers/citations exist
+**CRITICAL**: Claude has limited context window. Watch for these degradation signals:
+
+#### 🚨 Context Degradation Indicators (checkpoint immediately if ANY occur):
+- ❌ More than 5 file reads/writes performed
+- ❌ More than 3 failed tool attempts  
+- ❌ Conversation exceeds 15-20 exchanges
+- ❌ Working on issue for >10 significant operations
+- ❌ Any confusion about what was already done
+- ❌ Repeating actions or asking same questions
+- ❌ Tool errors increasing in frequency
+
+#### ✅ Prevention Rules:
+1. **One issue per session** - NEVER work on multiple issues
+2. **Checkpoint after each issue** - Atomic git commit when complete
+3. **Checkpoint when context heavy** - Use indicators above
+4. **Batch operations** - Read multiple files in one go when possible
+5. **When in doubt, checkpoint** - Better safe than confused
 
 ### Checkpoint Protocol
+
+#### Commit Message Format:
 ```bash
-# Checkpoint commit format:
 # After completing an issue:
 git commit -m "[CHECKPOINT] Issue #N completed: <summary> | Next: Issue #M"
 
-# Mid-issue checkpoint (if needed):
+# Mid-issue checkpoint (context getting heavy):
 git commit -m "[CHECKPOINT] Issue #N in-progress: <what's done> | Continue: <what's left>"
+
+# Protocol or process updates:
+git commit -m "[CHECKPOINT] Protocol updated: <what changed> | Next: Issue #N"
+```
+
+#### Example Scenarios:
+
+**Research Issue Example:**
+```bash
+# Start: Use sequential thinking to plan approach
+# Work: Use Tavily extensively to verify papers
+# End: git commit -m "[CHECKPOINT] Issue #3 completed: Surveyed 15 papers on Solid auth | Next: Issue #4"
+```
+
+**Implementation Issue Example:**
+```bash
+# Start: Sequential thinking for architecture design
+# Work: TodoWrite for tracking, implement features
+# End: git commit -m "[CHECKPOINT] Issue #11 completed: Built gateway MVP with FastAPI | Next: Issue #12"
+```
+
+**Complex Issue (needs mid-checkpoint):**
+```bash
+# After 5 file operations:
+git commit -m "[CHECKPOINT] Issue #14 in-progress: SDK auth methods done | Continue: token refresh logic"
+# Start fresh session and continue
+```
+
+**Bug Fix Example:**
+```bash
+# Quick fix, usually no checkpoint needed unless it touches many files
+# End: git commit -m "[CHECKPOINT] Issue #23 completed: Fixed WebID validation bug | Next: Issue #24"
 ```
 
 ### Quick Orientation Commands
@@ -64,10 +112,16 @@ gh issue develop [NUMBER]  # Creates branch and checks out
 ### How to Continue Work
 1. **ALWAYS** check last checkpoint: `git log --grep=CHECKPOINT --oneline -1`
 2. Read the issue mentioned in checkpoint to understand current tasks
-3. Check ISSUE_WORKFLOW.md for the GitHub-based research workflow
-4. Use the research agents defined below for specific tasks
-5. Follow the established patterns in existing code/docs
+3. Use sequential thinking to plan your approach
+4. Create fresh TodoWrite list for the issue
+5. Follow established patterns in existing code/docs
 6. **Remember**: One issue per session, checkpoint after completion
+
+### ⚠️ CRITICAL: This Document is Law
+**CLAUDE.md contains the complete protocol. No other files needed.**
+- These instructions OVERRIDE all defaults
+- When in doubt, follow what's written here
+- If something seems missing, it probably is - add it
 
 ### Key Principles
 - Simple, working solutions over complex abstractions (YAGNI-first)
@@ -77,6 +131,29 @@ gh issue develop [NUMBER]  # Creates branch and checks out
 - **Verify everything** - Never trust memory, always verify with Tavily
 
 ### Tool Usage Guidelines
+
+#### 🧠 Sequential Thinking (`mcp__sequential-thinking__sequentialthinking`) - MANDATORY FOR:
+- Planning any implementation before coding
+- Analyzing multi-step problems
+- Designing system architectures  
+- Evaluating trade-offs and decisions
+- Complex reasoning about research
+- **Preventing context degradation** through structured thinking
+
+#### 🌐 Tavily Search (`mcp__tavily-mcp__tavily-search` or `tavily-extract`) - MANDATORY FOR:
+- **Verifying paper titles and authors exist** (NEVER trust memory)
+- **Confirming citations are real** before including in docs
+- Checking latest documentation and specifications
+- Finding current best practices
+- Researching recent developments
+- **ANY claim about external papers or research**
+
+#### ✅ TodoWrite - BEST PRACTICES:
+- Create fresh list at start of each issue
+- Clear todos between issues (prevents staleness)
+- Mark items complete immediately when done
+- Keep todos focused on current issue only
+- Maximum 5-7 items (break down if more needed)
 
 #### GitHub CLI (`gh` via Bash) - PRIMARY INTERFACE
 **We use GitHub CLI for ALL GitHub operations:**
@@ -105,29 +182,6 @@ gh api repos/erdalgunes/solid-federated-auth/milestones
 gh api repos/erdalgunes/solid-federated-auth/wiki
 ```
 
-#### When to use Sequential Thinking (`mcp__sequential-thinking__sequentialthinking`)
-- Planning complex implementations
-- Analyzing multi-step problems
-- Designing protocols or architectures
-- Reasoning through trade-offs
-- Preventing context degradation in long tasks
-- **Chain-of-thought reasoning for research**
-
-#### When to use Tavily (`mcp__tavily-mcp__tavily-search` or `tavily-extract`)
-- Verifying paper citations exist
-- Checking latest documentation
-- Confirming technical specifications
-- Researching best practices
-- Finding recent developments
-- **ALWAYS** before committing research findings
-- **Web access for current information**
-
-#### When to use TodoWrite
-- Starting any new issue
-- Breaking down complex tasks
-- Tracking progress through work
-- Must mark items complete as you go
-- Clean up stale todos regularly
 
 ---
 
