@@ -1,0 +1,957 @@
+openapi: 3.0.3
+info:
+  title: SolidAuth Gateway API
+  version: 1.0.0
+  description: |
+    A decentralized authentication gateway providing Auth0-like developer experience 
+    using Solid-OIDC protocol. This API enables applications to authenticate users 
+    through their Solid Pods without storing credentials or personal data.
+  contact:
+    name: SolidAuth Team
+    email: support@solidauth.com
+    url: https://github.com/erdalgunes/solid-federated-auth
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://gateway.solidauth.com/api/v1
+    description: Production server
+  - url: https://staging.solidauth.com/api/v1
+    description: Staging server
+  - url: http://localhost:8000/api/v1
+    description: Local development
+
+tags:
+  - name: Authentication
+    description: OAuth 2.0 and Solid-OIDC authentication endpoints
+  - name: Applications
+    description: Application registration and management
+  - name: Resources
+    description: Solid Pod resource access proxy
+  - name: Admin
+    description: System administration and health checks
+
+security:
+  - BearerAuth: []
+  - ApiKeyAuth: []
+
+paths:
+  /authorize:
+    get:
+      tags:
+        - Authentication
+      summary: Initiate authorization flow
+      description: Starts OAuth 2.0 + PKCE authorization flow
+      operationId: initiateAuthorization
+      parameters:
+        - name: client_id
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Application client ID
+        - name: redirect_uri
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uri
+          description: Callback URL (must be registered)
+        - name: response_type
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [code]
+          description: Must be "code"
+        - name: scope
+          in: query
+          schema:
+            type: string
+            default: openid profile
+          description: Space-separated scopes
+        - name: state
+          in: query
+          required: true
+          schema:
+            type: string
+          description: CSRF protection state
+        - name: code_challenge
+          in: query
+          required: true
+          schema:
+            type: string
+          description: PKCE code challenge
+        - name: code_challenge_method
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [S256]
+          description: Must be "S256"
+      responses:
+        '302':
+          description: Redirects to login with session cookie
+          headers:
+            Location:
+              schema:
+                type: string
+                example: /login?session=abc123
+            Set-Cookie:
+              schema:
+                type: string
+                example: solidauth_session=abc123; Path=/; Secure; HttpOnly; SameSite=Lax
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /login:
+    post:
+      tags:
+        - Authentication
+      summary: Login with WebID
+      description: Processes WebID and initiates Solid-OIDC flow with user's provider
+      operationId: loginWithWebId
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - webid
+                - session_id
+              properties:
+                webid:
+                  type: string
+                  format: uri
+                  example: https://user.solidcommunity.net/profile/card#me
+                session_id:
+                  type: string
+                  example: abc123
+      responses:
+        '302':
+          description: Redirects to Solid provider authorization
+          headers:
+            Location:
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /callback:
+    get:
+      tags:
+        - Authentication
+      summary: Handle provider callback
+      description: Processes authorization code from Solid provider
+      operationId: handleCallback
+      parameters:
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Authorization code from provider
+        - name: state
+          in: query
+          required: true
+          schema:
+            type: string
+          description: State parameter for CSRF protection
+        - name: error
+          in: query
+          schema:
+            type: string
+          description: Error code if authorization failed
+        - name: error_description
+          in: query
+          schema:
+            type: string
+          description: Human-readable error description
+      responses:
+        '302':
+          description: Redirects to application with authorization code
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /token:
+    post:
+      tags:
+        - Authentication
+      summary: Exchange code for tokens
+      description: Exchanges authorization code for access and refresh tokens
+      operationId: exchangeToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - grant_type
+                - code
+                - client_id
+                - code_verifier
+                - redirect_uri
+              properties:
+                grant_type:
+                  type: string
+                  enum: [authorization_code]
+                code:
+                  type: string
+                client_id:
+                  type: string
+                client_secret:
+                  type: string
+                code_verifier:
+                  type: string
+                redirect_uri:
+                  type: string
+                  format: uri
+      responses:
+        '200':
+          description: Tokens generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /token/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh access token
+      description: Uses refresh token to obtain new access token
+      operationId: refreshToken
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - grant_type
+                - refresh_token
+              properties:
+                grant_type:
+                  type: string
+                  enum: [refresh_token]
+                refresh_token:
+                  type: string
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /userinfo:
+    get:
+      tags:
+        - Authentication
+      summary: Get user information
+      description: Returns authenticated user's profile information
+      operationId: getUserInfo
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User information returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserInfo'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /logout:
+    post:
+      tags:
+        - Authentication
+      summary: Logout user
+      description: Terminates user session and optionally logs out from Solid provider
+      operationId: logout
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                logout_provider:
+                  type: boolean
+                  default: true
+                redirect_uri:
+                  type: string
+                  format: uri
+      responses:
+        '200':
+          description: Logged out successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: logged_out
+                  redirect_uri:
+                    type: string
+
+  /apps:
+    post:
+      tags:
+        - Applications
+      summary: Register application
+      description: Creates a new application registration
+      operationId: registerApplication
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplicationRegistration'
+      responses:
+        '201':
+          description: Application registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationCredentials'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /apps/{client_id}:
+    get:
+      tags:
+        - Applications
+      summary: Get application details
+      description: Retrieves application configuration
+      operationId: getApplication
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: client_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Application details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationDetails'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - Applications
+      summary: Update application
+      description: Updates application configuration
+      operationId: updateApplication
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: client_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplicationUpdate'
+      responses:
+        '200':
+          description: Application updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  client_id:
+                    type: string
+                  updated_at:
+                    type: string
+                    format: date-time
+                  message:
+                    type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - Applications
+      summary: Delete application
+      description: Removes application registration
+      operationId: deleteApplication
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: client_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Application deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  deleted_at:
+                    type: string
+                    format: date-time
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /apps/{client_id}/rotate-secret:
+    post:
+      tags:
+        - Applications
+      summary: Rotate client secret
+      description: Generates new client secret for application
+      operationId: rotateSecret
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: client_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Secret rotated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  client_id:
+                    type: string
+                  client_secret:
+                    type: string
+                  client_secret_expires_at:
+                    type: integer
+                  rotated_at:
+                    type: string
+                    format: date-time
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /proxy/resource:
+    post:
+      tags:
+        - Resources
+      summary: Access Solid Pod resource
+      description: Proxies authenticated requests to Solid Pods
+      operationId: proxyResource
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - method
+                - url
+              properties:
+                method:
+                  type: string
+                  enum: [GET, POST, PUT, DELETE, PATCH]
+                url:
+                  type: string
+                  format: uri
+                headers:
+                  type: object
+                  additionalProperties:
+                    type: string
+                body:
+                  type: string
+      responses:
+        '200':
+          description: Resource accessed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                  headers:
+                    type: object
+                  body:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '502':
+          $ref: '#/components/responses/BadGateway'
+
+  /health:
+    get:
+      tags:
+        - Admin
+      summary: Get system health
+      description: Returns gateway health status
+      operationId: getHealth
+      security: []
+      responses:
+        '200':
+          description: System is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+
+  /health/ready:
+    get:
+      tags:
+        - Admin
+      summary: Get readiness status
+      description: Checks if service is ready to handle requests
+      operationId: getReadiness
+      security: []
+      responses:
+        '200':
+          description: Service is ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadinessStatus'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /metrics:
+    get:
+      tags:
+        - Admin
+      summary: Get metrics
+      description: Returns service metrics in Prometheus format
+      operationId: getMetrics
+      security: []
+      responses:
+        '200':
+          description: Metrics retrieved
+          content:
+            text/plain:
+              schema:
+                type: string
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+  schemas:
+    TokenResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+          example: Bearer
+        expires_in:
+          type: integer
+          example: 3600
+        refresh_token:
+          type: string
+        scope:
+          type: string
+          example: openid profile email
+
+    UserInfo:
+      type: object
+      properties:
+        sub:
+          type: string
+          format: uri
+          example: https://alice.solidweb.org/profile/card#me
+        name:
+          type: string
+        preferred_username:
+          type: string
+        email:
+          type: string
+          format: email
+        email_verified:
+          type: boolean
+        picture:
+          type: string
+          format: uri
+        webid:
+          type: string
+          format: uri
+        solid_provider:
+          type: string
+          format: uri
+        updated_at:
+          type: integer
+
+    ApplicationRegistration:
+      type: object
+      required:
+        - name
+        - redirect_uris
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        website:
+          type: string
+          format: uri
+        redirect_uris:
+          type: array
+          items:
+            type: string
+            format: uri
+        logo_uri:
+          type: string
+          format: uri
+        contacts:
+          type: array
+          items:
+            type: string
+            format: email
+        grant_types:
+          type: array
+          items:
+            type: string
+            enum: [authorization_code, refresh_token]
+        response_types:
+          type: array
+          items:
+            type: string
+            enum: [code]
+
+    ApplicationCredentials:
+      type: object
+      properties:
+        client_id:
+          type: string
+        client_secret:
+          type: string
+        client_id_issued_at:
+          type: integer
+        client_secret_expires_at:
+          type: integer
+        registration_access_token:
+          type: string
+        registration_client_uri:
+          type: string
+        application_type:
+          type: string
+        grant_types:
+          type: array
+          items:
+            type: string
+        response_types:
+          type: array
+          items:
+            type: string
+        redirect_uris:
+          type: array
+          items:
+            type: string
+
+    ApplicationDetails:
+      type: object
+      properties:
+        client_id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        website:
+          type: string
+        redirect_uris:
+          type: array
+          items:
+            type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        active:
+          type: boolean
+        stats:
+          type: object
+          properties:
+            total_users:
+              type: integer
+            active_sessions:
+              type: integer
+            requests_today:
+              type: integer
+
+    ApplicationUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        redirect_uris:
+          type: array
+          items:
+            type: string
+        website:
+          type: string
+
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+        version:
+          type: string
+        uptime:
+          type: integer
+        timestamp:
+          type: string
+          format: date-time
+
+    ReadinessStatus:
+      type: object
+      properties:
+        ready:
+          type: boolean
+        checks:
+          type: object
+          properties:
+            database:
+              type: string
+              enum: [connected, disconnected]
+            redis:
+              type: string
+              enum: [connected, disconnected]
+            providers:
+              type: string
+              enum: [reachable, unreachable]
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - error_description
+      properties:
+        error:
+          type: string
+          enum:
+            - invalid_request
+            - unauthorized
+            - forbidden
+            - not_found
+            - method_not_allowed
+            - conflict
+            - rate_limited
+            - internal_error
+            - provider_error
+            - service_unavailable
+        error_description:
+          type: string
+        error_uri:
+          type: string
+          format: uri
+        trace_id:
+          type: string
+
+  responses:
+    BadRequest:
+      description: Bad request - Invalid parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: invalid_request
+            error_description: The request is missing a required parameter
+            error_uri: https://docs.solidauth.com/errors/invalid_request
+            trace_id: abc123xyz789
+
+    Unauthorized:
+      description: Unauthorized - Invalid credentials or token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: unauthorized
+            error_description: Invalid access token
+            error_uri: https://docs.solidauth.com/errors/unauthorized
+            trace_id: abc123xyz789
+
+    Forbidden:
+      description: Forbidden - Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: forbidden
+            error_description: You do not have permission to access this resource
+            error_uri: https://docs.solidauth.com/errors/forbidden
+            trace_id: abc123xyz789
+
+    NotFound:
+      description: Not found - Resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: not_found
+            error_description: The requested resource was not found
+            error_uri: https://docs.solidauth.com/errors/not_found
+            trace_id: abc123xyz789
+
+    Conflict:
+      description: Conflict - Resource already exists
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: conflict
+            error_description: An application with this name already exists
+            error_uri: https://docs.solidauth.com/errors/conflict
+            trace_id: abc123xyz789
+
+    UnprocessableEntity:
+      description: Unprocessable entity - Request cannot be processed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: invalid_request
+            error_description: No OIDC issuer found in WebID document
+            error_uri: https://docs.solidauth.com/errors/invalid_request
+            trace_id: abc123xyz789
+
+    BadGateway:
+      description: Bad gateway - Error from upstream service
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: provider_error
+            error_description: The Solid provider returned an error
+            error_uri: https://docs.solidauth.com/errors/provider_error
+            trace_id: abc123xyz789
+
+    ServiceUnavailable:
+      description: Service unavailable - Service temporarily unavailable
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: service_unavailable
+            error_description: The service is temporarily unavailable
+            error_uri: https://docs.solidauth.com/errors/service_unavailable
+            trace_id: abc123xyz789
+
+  parameters:
+    ClientId:
+      name: client_id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Application client ID
+
+    PageParam:
+      name: page
+      in: query
+      schema:
+        type: integer
+        default: 1
+      description: Page number
+
+    PerPageParam:
+      name: per_page
+      in: query
+      schema:
+        type: integer
+        default: 20
+        maximum: 100
+      description: Items per page
+
+    SortParam:
+      name: sort
+      in: query
+      schema:
+        type: string
+        default: created_at
+      description: Sort field
+
+    OrderParam:
+      name: order
+      in: query
+      schema:
+        type: string
+        enum: [asc, desc]
+        default: desc
+      description: Sort order
