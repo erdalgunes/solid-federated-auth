@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use this research or software, please cite it as below."
+title: "SolidAuth: A Decentralized Authentication Gateway for Solid-OIDC"
+authors:
+  - family-names: "Gunes"
+    given-names: "Erdal"
+    orcid: "https://orcid.org/0000-0000-0000-0000"
+type: software
+repository-code: "https://github.com/erdalgunes/solid-federated-auth"
+keywords:
+  - solid
+  - webid
+  - authentication
+  - decentralized-identity
+  - oidc
+  - federated-authentication
+license: MIT
+version: 0.1.0
+date-released: 2025-01-30
