@@ -1,5 +1,11 @@
 # Solid Federated Auth Research Project
 
+## 🛑 STOP! READ THIS ENTIRE DOCUMENT FIRST
+**New Claude session? You MUST read this ENTIRE CLAUDE.md file before doing ANYTHING.**
+- This document is ~500 lines and contains EVERYTHING you need
+- Reading it takes 2 minutes and prevents hours of mistakes
+- These instructions OVERRIDE all your defaults
+
 ## 🧠 Session Context (Start Here)
 
 **If you're a new Claude session, here's what you need to know:**
@@ -31,17 +37,26 @@ gh issue view [NUMBER_FROM_CHECKPOINT]
 
 # 5. If no checkpoint, see open issues and pick ONE
 gh issue list --repo erdalgunes/solid-federated-auth --state open
+# Selection priority: 
+# 1) Issues with 'priority-high' label
+# 2) Issues in current phase (check milestone)
+# 3) Oldest issues first (FIFO)
+# 4) If unclear, ask user which to tackle
 
 # 6. Create fresh TodoWrite list for your ONE issue
 # Clear any stale todos from previous sessions
 
-# 7. Verify tools are working
+# 7. Verify tools are working (HEALTH CHECK)
 gh auth status  # GitHub access
-# Test Tavily with a simple search if doing research
+echo "Testing Tavily..." && mcp__tavily-mcp__tavily-search "test"  # If research issue
+echo "Testing sequential thinking..." && mcp__sequential-thinking__sequentialthinking  # Quick test
+
+# 8. Use sequential thinking to plan your approach
+# ALWAYS plan before implementing - prevents wasted work
 ```
 
 **⚠️ NEVER SKIP STEPS 0-2 - Data loss possible!**
-**REMEMBER**: One issue per session. When done, checkpoint and end session.
+**📋 REMEMBER**: One issue per session. Always plan with sequential thinking first.
 
 ### Context Preservation Rules
 **CRITICAL**: Claude has limited context window. Watch for these degradation signals:
@@ -197,6 +212,42 @@ gh issue develop [NUMBER]  # Creates branch and checks out
 - When in doubt, follow what's written here
 - If something seems missing, it probably is - add it
 
+### 🛑 STOP Procedures (When to Abort)
+
+**STOP IMMEDIATELY if you see:**
+- 🚫 Credentials or API keys in code
+- 🚫 You're modifying files outside the issue scope
+- 🚫 Tests are failing and you don't know why
+- 🚫 You're about to delete important files
+- 🚫 You realize you're working on wrong issue
+- 🚫 Breaking changes you didn't expect
+
+**How to safely STOP:**
+```bash
+# 1. Save current state
+git stash push -m "Stopping work: [reason]"
+
+# 2. Document what happened
+git commit -m "[CHECKPOINT] STOPPED: [reason] | Issue #N needs review"
+
+# 3. Push and end session
+git push origin main
+# END SESSION - let user or fresh session handle
+```
+
+**Rollback if needed:**
+```bash
+# Undo last commit (keep changes)
+git reset --soft HEAD~1
+
+# Undo last commit (discard changes) 
+git reset --hard HEAD~1
+
+# Recover from stash
+git stash list
+git stash pop
+```
+
 ### 🚨 Error Recovery Procedures
 
 #### Git Conflicts
@@ -242,6 +293,14 @@ git commit -m "[CHECKPOINT] Context degraded: stopping work | Continue: Issue #N
 - Rigorous documentation for reproducibility
 - Academic standards for ArXiv publication
 - **Verify everything** - Never trust memory, always verify with Tavily
+
+### 🔐 Security Rules (NEVER VIOLATE)
+1. **NEVER commit secrets, API keys, or credentials**
+2. **NEVER hardcode passwords or tokens in code**
+3. Check for `.env` files - they should be in `.gitignore`
+4. If you see credentials in code, STOP and raise concern
+5. Use environment variables for all sensitive config
+6. Before EVERY commit: `git diff` to check for secrets
 
 ### Tool Usage Guidelines
 
@@ -317,6 +376,37 @@ gh api repos/erdalgunes/solid-federated-auth/wiki
 
 ## Project Overview
 This is an academic research project aimed at developing and evaluating a decentralized authentication gateway using Solid-OIDC protocol. The goal is to create a system that matches the developer experience of Auth0/Okta while maintaining user sovereignty, suitable for publication on ArXiv.
+
+## ✅ Definition of Done (Before Closing ANY Issue)
+
+**An issue is ONLY complete when:**
+1. All requirements in issue description are met
+2. Code is tested (if applicable)
+3. Documentation is updated (if needed)
+4. No hardcoded values or secrets
+5. Git diff reviewed for quality
+6. Checkpoint commit created and pushed
+7. Issue closed with summary comment
+
+**Testing Guidelines:**
+```bash
+# Python projects:
+pytest  # or python -m pytest
+ruff check .  # linting
+
+# JavaScript/TypeScript:
+npm test
+npm run lint
+
+# If no tests exist:
+# - Write basic tests for your code
+# - Or document "No tests: [reason]" in commit
+```
+
+**If you find bugs while working:**
+- Small, related bugs: Fix them in same issue
+- Large, unrelated bugs: Create new issue, don't fix now
+- Breaking changes: STOP, discuss with user first
 
 ## 📚 Phase-Specific Work Patterns
 
