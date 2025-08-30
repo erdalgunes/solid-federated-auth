@@ -10,19 +10,37 @@ You're working on **SolidAuth** - an academic research project creating a decent
 **MUST execute in order - no exceptions:**
 
 ```bash
-# 1. ALWAYS run this first - finds your last checkpoint
-git log --grep=CHECKPOINT --oneline -1
+# 0. SANITY CHECK - Verify you're in the right place
+pwd  # Should show /Users/erdalgunes/solid-federated-auth
+git remote -v  # Should show erdalgunes/solid-federated-auth
 
-# 2. If checkpoint found, read that issue
+# 1. Check for uncommitted work (CRITICAL)
+git status
+# If changes exist: either commit with checkpoint or stash
+# git stash push -m "Saving work before new session"
+
+# 2. Find last checkpoint (ALWAYS run this)
+git log --grep=CHECKPOINT --oneline -1
+# If empty, you're starting fresh - that's OK
+
+# 3. Pull latest changes
+git pull origin main
+
+# 4. If checkpoint found, read that issue
 gh issue view [NUMBER_FROM_CHECKPOINT]
 
-# 3. If no checkpoint, see open issues and pick ONE
+# 5. If no checkpoint, see open issues and pick ONE
 gh issue list --repo erdalgunes/solid-federated-auth --state open
 
-# 4. Create fresh TodoWrite list for your ONE issue
+# 6. Create fresh TodoWrite list for your ONE issue
 # Clear any stale todos from previous sessions
+
+# 7. Verify tools are working
+gh auth status  # GitHub access
+# Test Tavily with a simple search if doing research
 ```
 
+**⚠️ NEVER SKIP STEPS 0-2 - Data loss possible!**
 **REMEMBER**: One issue per session. When done, checkpoint and end session.
 
 ### Context Preservation Rules
@@ -44,10 +62,53 @@ gh issue list --repo erdalgunes/solid-federated-auth --state open
 4. **Batch operations** - Read multiple files in one go when possible
 5. **When in doubt, checkpoint** - Better safe than confused
 
+### 📊 Performance Optimization (Preserve Context)
+
+#### File Operations
+```bash
+# WRONG: Multiple separate reads
+Read file1.py
+Read file2.py
+Read file3.py
+
+# RIGHT: Batch reads in single operation
+Read file1.py, file2.py, file3.py (parallel)
+```
+
+#### Finding Files
+```bash
+# WRONG: Blind reading
+Read src/auth/handler.py  # Might not exist
+
+# RIGHT: Find first, then read
+Glob "src/**/*handler*.py"  # Find files
+Read <specific files found>  # Read what exists
+```
+
+#### Large Files
+```bash
+# WRONG: Read entire large file
+Read huge_file.log
+
+# RIGHT: Read specific parts
+Read huge_file.log limit=100  # First 100 lines
+Read huge_file.log offset=500 limit=50  # Lines 500-550
+```
+
+#### Search Operations
+- Use Grep for code search (not Bash grep)
+- Use Glob for file patterns
+- Batch searches when possible
+- Use `head_limit` parameter to reduce output
+
 ### Checkpoint Protocol
 
-#### Commit Message Format:
+#### Complete Checkpoint Process:
 ```bash
+# 1. Stage all changes
+git add -A
+
+# 2. Create checkpoint commit with appropriate message:
 # After completing an issue:
 git commit -m "[CHECKPOINT] Issue #N completed: <summary> | Next: Issue #M"
 
@@ -56,7 +117,20 @@ git commit -m "[CHECKPOINT] Issue #N in-progress: <what's done> | Continue: <wha
 
 # Protocol or process updates:
 git commit -m "[CHECKPOINT] Protocol updated: <what changed> | Next: Issue #N"
+
+# 3. ALWAYS push to remote (prevents local-only checkpoints)
+git push origin main  # If on main branch
+# OR
+git push origin HEAD  # If on feature branch
 ```
+
+**⚠️ WARNING**: Checkpoint not complete until pushed to remote!
+
+#### Branch Strategy
+- **Simple issues**: Work on main, commit directly
+- **Complex features**: Use `gh issue develop N` to create branch
+- **After issue complete**: Merge branch to main or create PR
+- **For this project**: Mostly using main for simplicity (academic project)
 
 #### Example Scenarios:
 
@@ -123,6 +197,45 @@ gh issue develop [NUMBER]  # Creates branch and checks out
 - When in doubt, follow what's written here
 - If something seems missing, it probably is - add it
 
+### 🚨 Error Recovery Procedures
+
+#### Git Conflicts
+```bash
+# If git pull shows conflicts:
+git status  # See conflicted files
+# For CLAUDE.md or protocol files, keep remote version:
+git checkout --theirs CLAUDE.md
+# For your work files, resolve manually or checkpoint and restart
+```
+
+#### Failed Checkpoint
+```bash
+# If commit fails:
+git status  # Check what's wrong
+git diff    # Review changes
+# Try again with explicit add:
+git add -A && git commit -m "[CHECKPOINT] Recovery: <describe state>"
+```
+
+#### Tool Failures
+- **GitHub CLI fails**: Check `gh auth status`, re-authenticate if needed
+- **Tavily not responding**: Note in document, continue without verification
+- **File operations fail**: Check permissions, disk space
+- **If multiple tools failing**: Checkpoint immediately and end session
+
+#### Context Confusion
+**Signs you're confused:**
+- Can't remember what issue you're working on
+- Repeating same operations
+- Getting conflicting information
+
+**Recovery:**
+```bash
+git add -A
+git commit -m "[CHECKPOINT] Context degraded: stopping work | Continue: Issue #N"
+# END SESSION - let fresh session continue
+```
+
 ### Key Principles
 - Simple, working solutions over complex abstractions (YAGNI-first)
 - Issue-driven development (every task has an issue)
@@ -147,6 +260,23 @@ gh issue develop [NUMBER]  # Creates branch and checks out
 - Finding current best practices
 - Researching recent developments
 - **ANY claim about external papers or research**
+
+**⚠️ CRITICAL RESEARCH RULES:**
+1. **NEVER write a paper citation without Tavily verification first**
+2. **Claude can hallucinate plausible paper titles** - always verify
+3. **If you "remember" a paper, you're probably wrong** - verify it
+4. **Include ArXiv/DOI URLs when available** after verification
+5. **If Tavily can't find it, explicitly mark as "unverified"**
+
+Example verification:
+```python
+# WRONG: Adding citation from memory
+"According to Smith et al. (2023) in 'Decentralized Identity Systems'..."
+
+# RIGHT: Verify first with Tavily
+# tavily_search("Smith 2023 Decentralized Identity Systems paper")
+# Then add with verified details and URL
+```
 
 #### ✅ TodoWrite - BEST PRACTICES:
 - Create fresh list at start of each issue
@@ -187,6 +317,40 @@ gh api repos/erdalgunes/solid-federated-auth/wiki
 
 ## Project Overview
 This is an academic research project aimed at developing and evaluating a decentralized authentication gateway using Solid-OIDC protocol. The goal is to create a system that matches the developer experience of Auth0/Okta while maintaining user sovereignty, suitable for publication on ArXiv.
+
+## 📚 Phase-Specific Work Patterns
+
+### Phase 1: Literature Review (Issues #1-4)
+**Context Management**: Tavily-heavy, checkpoint after each paper batch
+```bash
+# Pattern for literature issues:
+1. Use sequential thinking to plan search strategy
+2. Use Tavily to find and verify EVERY paper
+3. Batch paper verifications to reduce API calls
+4. Document findings with verified citations
+5. Checkpoint after 10-15 papers reviewed
+```
+
+### Phase 2: Design & Implementation (Issues #8-16)
+**Context Management**: Code-heavy, checkpoint after major components
+```bash
+# Pattern for implementation issues:
+1. Use sequential thinking for architecture decisions
+2. Use TodoWrite to track implementation steps
+3. Batch file reads when exploring codebase
+4. Test as you go (don't accumulate untested code)
+5. Checkpoint after each major component complete
+```
+
+### Phase 3: Evaluation (Future)
+**Context Management**: Data-heavy, checkpoint after benchmarks
+```bash
+# Pattern for evaluation issues:
+1. Design experiments with sequential thinking
+2. Run benchmarks in small batches
+3. Save results immediately (don't keep in memory)
+4. Checkpoint after each benchmark suite
+```
 
 ## Research Question
 **Can decentralized identity systems achieve the same developer experience and performance as centralized authentication services while maintaining user sovereignty?**
