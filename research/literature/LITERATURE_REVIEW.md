@@ -133,21 +133,23 @@ This document tracks relevant academic papers, industry reports, and technical s
 
 ### 4.1 Centralized Authentication Services
 
-| System | Architecture | Performance | Privacy | Cost |
-|--------|-------------|-------------|---------|------|
-| Auth0 | Cloud SaaS | <200ms p95 | Limited | $$$$ |
-| Okta | Cloud SaaS | <250ms p95 | Limited | $$$$ |
-| Firebase Auth | Cloud PaaS | <300ms p95 | Limited | $$ |
-| AWS Cognito | Cloud PaaS | <350ms p95 | Limited | $$ |
+**See detailed analysis**: [AUTH_SERVICES_COMPARISON.md](./AUTH_SERVICES_COMPARISON.md)
+
+| System | Architecture | Performance (P95) | Throughput | Cost |
+|--------|-------------|------------------|------------|------|
+| Auth0 | Cloud SaaS | 19.5ms | 100-500 RPS | $$$$ |
+| Okta | Cloud SaaS | <50ms | Limited | $$$$ |
+| Firebase Auth | Cloud PaaS | Unknown | Unknown | $$ |
+| AWS Cognito | Cloud PaaS | Unknown | Unknown | $$ |
 
 ### 4.2 Open Source Alternatives
 
-| System | Architecture | Solid Support | Deployment |
-|--------|-------------|---------------|------------|
-| Keycloak | Self-hosted | No | Complex |
-| Gluu | Self-hosted | No | Complex |
-| Authentik | Self-hosted | No | Medium |
-| SuperTokens | Self-hosted | No | Simple |
+| System | Architecture | Performance | Solid Support | Deployment |
+|--------|-------------|-------------|---------------|------------|
+| Keycloak | Self-hosted | 300-2000 RPS | No | Complex |
+| Gluu | Self-hosted | Unknown | No | Complex |
+| Authentik | Self-hosted | Unknown | No | Medium |
+| SuperTokens | Self-hosted | Unknown | No | Simple |
 
 **Gap**: No existing system combines Solid-OIDC with Auth0-like ease of use
 
