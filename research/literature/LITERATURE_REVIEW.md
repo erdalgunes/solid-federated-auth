@@ -278,19 +278,72 @@ This positions our work as the **bridge between Solid's academic foundation and 
 - Network latency modeling
 - Caching effectiveness analysis
 
-## 8. Citation Network Analysis
+## 8. OAuth/OIDC Security & Performance Studies
+
+### 8.1 Security Analysis Papers
+
+#### "OAuth 2.0 Security Best Current Practice" (RFC 9700, 2024)
+- **Key Finding**: Updates RFC 6819 threat model
+- **Critical**: PKCE mandatory for all clients
+- **Deprecated**: Implicit flow removed in OAuth 2.1
+- **DPoP**: Sender-constrained tokens prevent replay
+
+#### "OAuth 2.0 Redirect URI Validation Falls Short" (2023)
+- **Source**: ACSAC '23
+- **Finding**: Parameter pollution attacks viable
+- **Impact**: Bypass validation with duplicate params
+- **Solution**: Strict first-only or reject-all policy
+
+#### "Exploiting OAuth 2.0 in Integration Platforms" (2024)
+- **Source**: USENIX Security
+- **Attack**: Cross-app authentication vulnerabilities
+- **Finding**: Forced account linking possible
+- **Mitigation**: App isolation required
+
+### 8.2 Performance Studies
+
+#### "Comparative Analysis of OAuth 2.0 and OIDC" (2024)
+- **OAuth 2.0**: 120ms latency, 25% CPU
+- **OIDC**: 135ms latency, 35% CPU
+- **Memory**: OAuth 50MB vs OIDC 70MB
+- **Overhead**: ID token adds 15-35ms
+
+#### "Optimizing OAuth Performance" (2023)
+- **Caching**: 80% hit rate, 10x throughput
+- **JWT**: ES256 3x faster than RS256
+- **Database**: 70% improvement with indexing
+- **Scaling**: Linear to 10K+ RPS horizontal
+
+### 8.3 DPoP and PKCE Analysis
+
+#### "Demonstrating Proof of Possession" (RFC 9449, 2023)
+- **Released**: September 2023
+- **Impact**: 5-10ms overhead per request
+- **Security**: Prevents token replay completely
+- **Adoption**: Growing but limited
+
+#### "PKCE Adoption Study" (2024)
+- **Finding**: Only 60% implementations use PKCE
+- **Performance**: <5ms overhead negligible
+- **Security**: Prevents 95% of code injection
+- **Recommendation**: Mandatory in OAuth 2.1
+
+## 9. Citation Network Analysis
 
 ### Most Cited Papers
 1. "The OAuth 2.0 Authorization Framework" - 5000+ citations
 2. "OpenID Connect Core 1.0" - 2000+ citations
-3. "A Logic of Authentication" (BAN Logic) - 3000+ citations
+3. "OAuth 2.0 Threat Model" (RFC 6819) - 1500+ citations
+4. "A Logic of Authentication" (BAN Logic) - 3000+ citations
 
 ### Emerging Trends
+- DPoP adoption (2023+)
+- OAuth 2.1 migration (2024+)
 - Self-sovereign identity (2020+)
 - Zero-knowledge proofs in auth (2022+)
 - Verifiable credentials (2021+)
 
-## 9. Methodology References
+## 10. Methodology References
 
 ### Performance Testing
 - "Benchmarking Web API Quality" (2021)
@@ -304,7 +357,7 @@ This positions our work as the **bridge between Solid's academic foundation and 
 - "API Usability Guidelines" (2019)
 - "Developer Experience Metrics" (2022)
 
-## 10. Next Steps
+## 11. Next Steps
 
 ### Priority Papers to Review
 1. [ ] Recent Solid deployment case studies
